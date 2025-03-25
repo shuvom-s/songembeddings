@@ -1,0 +1,3 @@
+# Ignore actual lyrics files if they exist
+*.gz
+# Add other patterns as needed

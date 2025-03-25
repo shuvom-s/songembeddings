@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Lyrics Embeddings Visualization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.plot.ly/plotly-2.29.0.min.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Song Lyrics Embedding Visualization</h1>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>2D Embedding Visualization (DensMAP)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="embedding-plot" class="visualization-container"></div>
+                        <div id="legend-container" style="display: none;">
+                            <div class="legend-title">Legend</div>
+                            <div id="genre-legend"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Song Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="song-details">
+                            <p class="text-muted">Click on a point to see song details</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Filter Options</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="genre-filter" class="form-label">Filter by Genre(s)</label>
+                            <select id="genre-filter" class="form-select" multiple size="5">
+                                <option value="all" selected>All Genres</option>
+                            </select>
+                            <small class="text-muted">Hold Ctrl (or Cmd) to select multiple genres</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="artist-filter" class="form-label">Filter by Artist(s)</label>
+                            <select id="artist-filter" class="form-select" multiple size="5">
+                                <option value="all" selected>All Artists</option>
+                            </select>
+                            <small class="text-muted">Hold Ctrl (or Cmd) to select multiple artists</small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
+                            <button id="reset-filters" class="btn btn-danger">Reset Filters</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- SAE Neuron Visualization Controls -->
+                <div id="sae-controls" class="card mb-4" style="display: none;">
+                    <div class="card-header">
+                        <h5>Sparse Autoencoder</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="neuron-filter" class="form-label">Highlight Neuron Activations</label>
+                            <select id="neuron-filter" class="form-select">
+                                <option value="-1">None (Color by Genre)</option>
+                                <!-- Neurons will be added here by JavaScript -->
+                            </select>
+                        </div>
+                        <div id="neuron-info" class="mb-3">
+                            <h6>Top Songs for this Neuron:</h6>
+                            <div id="neuron-top-songs" class="small">
+                                <p class="text-muted">Select a neuron to see its top activations</p>
+                            </div>
+                            <button id="view-more-songs" class="btn btn-sm btn-outline-primary mt-2" style="display: none;">
+                                View All Top Songs
+                            </button>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label for="threshold-slider" class="form-label">Activation Threshold: <span id="threshold-value">0.20</span></label>
+                            <input type="range" class="form-range" id="threshold-slider" min="0" max="1" step="0.01" value="0.2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>About This Visualization</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            This visualization shows song lyrics embeddings projected into 2D space using DensMAP, a variant of UMAP that preserves both local and global structure.
+                            Each point represents a song, and similar songs are positioned closer together in the embedding space.
+                        </p>
+                        <p>
+                            The embeddings were created using OpenAI's text-embedding-3-small model. Songs are colored by genre to show how different musical styles cluster in the embedding space.
+                        </p>
+                        <div id="sae-description" style="display: none;">
+                            <p>
+                                The visualization also includes sparse autoencoder (SAE) features. SAEs can help identify meaningful patterns in the embedding space by learning sparse activations.
+                                You can highlight songs based on specific neuron activations to explore what each neuron detects in the lyrics.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying top songs for a neuron -->
+    <div class="modal fade" id="neuron-songs-modal" tabindex="-1" aria-labelledby="neuron-songs-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="neuron-songs-modal-label">Top Songs for Neuron</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modal-neuron-info">
+                        <!-- Will be populated with neuron information -->
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Song</th>
+                                    <th scope="col">Artist</th>
+                                    <th scope="col">Activation</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-songs-table">
+                                <!-- Will be populated with song data -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (for modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="scripts.js"></script>
+</body>
+</html> 

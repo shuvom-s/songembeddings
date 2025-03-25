@@ -1,0 +1,85 @@
+# Song lyrics files (both real and placeholder)
+songs/
+songs.tar.gz
+songs_*.tar.gz
+data/songs.tar.gz
+
+# Large data files
+*.npy
+*.h5
+*.pt
+*.pth
+models/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment directories
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Notebooks and checkpoints
+.ipynb_checkpoints
+*.ipynb
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary data
+tmp/
+temp/
+*.tmp
+
+# Exclude large embeddings files
+data/embeddings/*.npy
+
+# Specific project files to exclude
+wandb/
+node_modules/
+
+# IMPORTANT: Include essential files for Netlify deployment
+!web/
+!web/**/*
+!web/data.json  # Explicitly include data.json
+!README.md
+!NETLIFY_DEPLOYMENT.md
+!src/
+!src/**/*
+!netlify.toml

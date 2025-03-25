@@ -1,0 +1,6 @@
+# Netlify redirects file
+# Ensure that data.json is served correctly
+/data.json /data.json 200
+
+# Fallback to index.html for client-side routing
+/* /index.html 200 
